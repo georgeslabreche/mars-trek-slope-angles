@@ -5,5 +5,4 @@ Calculate the slope angles along an elevation profile generated on [trek.nasa.go
 
 Not exactly rocket science:
 
-![Calculating the tangent](https://raw.githubusercontent.com/georgeslabreche/mars-trek-slope-angles
-/master/img/tan.png)
+![Calculating the tangent](https://raw.githubusercontent.com/georgeslabreche/mars-trek-slope-angles/master/img/tan.png)

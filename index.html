@@ -204,13 +204,26 @@
         </div-->
 
         <div class="row">
-          <div class="col-xl-3 col-sm-6 mb-3">
-            <div class="card text-white bg-danger o-hidden h-100">
+          <div class="col-md-3">
+
+          </div>
+          <div class="col-md-6">
+
+            <div class="card text-white bg-danger h-100"> <!-- What was o-hidden -->
               <div class="card-body">
                 <div class="card-body-icon">
                   <i class="fas fa-fw fa-mars"></i>
                 </div>
-                <div class="mr-5">
+                <div>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-danger dropdown-toggle btn-zero-datum" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      Delta Elevation
+                    </button>
+                    <div class="dropdown-menu">
+                      <a class="dropdown-item" href="javascript:setZeroDatum('topographic')">Elevation</a>
+                      <a class="dropdown-item" href="javascript:setZeroDatum('delta')">Delta Elevation</a>
+                    </div>
+                  </div>
                   <input type="file" id="input" onchange="handleMarsTrekCsvFile(this.files)">
                 </div>
               </div>
@@ -222,7 +235,9 @@
               </a-->
             </div>
           </div>
+          <div class="col-md-3"></div>
         </div>
+        <br>
 
 
         <!-- Area Chart Example-->
@@ -341,6 +356,8 @@
   <!--script src="js/demo/chart-area-demo.js"></script-->
 
   <script>
+    window.zeroDatum = 'delta';
+
     // Refactor into a utils.js file.
     window.chartColors = {
     	red: 'rgb(255, 99, 132)',
@@ -358,12 +375,31 @@
 			return Color(color).alpha(alpha).rgbString();
 		}
 
+    function setZeroDatum(datum){
+      if(datum === 'delta'){
+        $(".btn-zero-datum").html('Delta Elevation');
+        window.zeroDatum = 'delta';
+
+      }else if(datum === 'topographic'){
+        $(".btn-zero-datum").html('Elevation');
+        window.zeroDatum = 'topographic';
+      }
+
+      // Redraw the plot if it has been drawn already.
+      if(window.csvFiles != undefined){
+        handleMarsTrekCsvFile(window.csvFiles);
+      }
+    }
+
     function handleMarsTrekCsvFile(files){
+      window.csvFiles = files;
+
       $(".instructions").hide();
 
       $("#canvasContainer").empty();
       $("#canvasContainer").append('<canvas id="canvas" width="100%" height="45"></canvas>');
 
+      // Process CSV file.
       Papa.parse(files[0], {
         header: true,
         skipEmptyLines: true,
@@ -371,10 +407,24 @@
       	complete: function(results) {
       		console.log(results);
 
+          // Extract data arrays for distances and elevations.
           var distances = results.data.map(a => a.Distance);
           var elevations = results.data.map(a => a.Elevation);
-          var slopeAngles = [0];
 
+          // If Delta Elevation has been selected:
+          // Plot the elevation values as absolute changes in elevation starting from a minimum elevation of 0
+          // rather than based on the default topographic datum elevation values.
+          if(window.zeroDatum === 'delta'){
+            var minElevation = Math.min(...elevations);
+            if(minElevation < 0){
+              for (i = 0; i < elevations.length; i++) {
+                elevations[i] = elevations[i] + Math.abs(minElevation);
+              }
+            }
+          }
+
+          // Calculate slope angles.
+          var slopeAngles = [0];
           for (i = 1; i < distances.length; i++) {
               var distance = distances[i];
               var elevation = elevations[i];
@@ -382,7 +432,7 @@
               console.log("Distance: "  + distance.toString() + " - " + distances[i-1].toString() + " = " + (distance-distances[i-1]).toString());
               console.log("Elevation: "  + elevation.toString() + " - " + elevations[i-1].toString() + " = " + (elevation-elevations[i-1]).toString());
 
-              var slopeAngle = Math.atan((elevation-elevations[i-1]) / (distance-distances[i-1]));
+              var slopeAngle = Math.atan((elevation - elevations[i-1]) / (distance - distances[i-1]));
               console.log("Elevation: " + slopeAngle);
               slopeAngles.push(Math.ceil(slopeAngle * 100));
           }

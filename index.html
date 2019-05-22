@@ -273,8 +273,7 @@
                     <th>Elevation [m]</th>
                     <th>Delta Elevation [m]</th>
                     <th>Slope Angle [deg]</th>
-                    <th>Latitude</th>
-                    <th>Longitude</th>
+                    <th>Coordinates</th>
                   </tr>
                 </thead>
                 <tfoot>
@@ -283,8 +282,7 @@
                     <th>Elevation [m]</th>
                     <th>Delta Elevation [m]</th>
                     <th>Slope Angle [deg]</th>
-                    <th>Latitude</th>
-                    <th>Longitude</th>
+                    <th>Coordinates</th>
                   </tr>
                 </tfoot>
               </table>
@@ -379,6 +377,21 @@
 			var alpha = opacity === undefined ? 0.5 : 1 - opacity;
 			return Color(color).alpha(alpha).rgbString();
 		}
+
+    function convertDDToDMS(D, lng, toString){
+        var coords = {
+          dir : D<0?lng?'W':'S':lng?'E':'N',
+          deg : 0|(D<0?D=-D:D),
+          min : 0|D%1*60,
+          sec :(0|D*60%1*6000)/100
+        };
+
+        if(toString == true){
+          return coords.deg.toString() + '&deg;&nbsp;' + coords.min.toString() + '\'&nbsp;' + coords.sec.toString() + '"&nbsp;' + coords.dir.toString();
+        }else{
+          coords;
+        }
+    }
 
     function setZeroDatum(datum){
       if(datum === 'delta'){
@@ -477,8 +490,7 @@
             { data: 'Elevation' },
             { data: 'ElevationDelta' },
             { data: 'SlopeAngle' },
-            { data: 'Latitude' },
-            { data: 'Longitude' }
+            { data: 'Coordinates' }
         ]
       });
     }
@@ -526,13 +538,26 @@
               //console.log("Slope Angle [deg]: " + slopeAngle + "\n\n");
           }
 
-          // Update results data object with Delta Elevattion and Slope Angle Values.
+          // Update results data object with Delta Elevattion, Slope Angle Values, and Degree Coordinates.
           $.each(results.data, function( index, value ) {
             results.data[index]['ElevationDelta'] = deltaElevations[index];
             results.data[index]['SlopeAngle'] = slopeAngles[index];
+
+            // Mars Trek URL.
+            var marsTrekUrl = 'https://trek.nasa.gov/mars/#v=0.1&x=' + results.data[index]['Longitude'] + '&y=' + results.data[index]['Latitude'] + '&z=5&p=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A104905&d='
+            results.data[index]['MapUrlMarsTrek'] = marsTrekUrl;
+
+            var ddLon = convertDDToDMS(results.data[index]['Longitude'], true, true);
+            var ddLat = convertDDToDMS(results.data[index]['Latitude'], false, true);
+            var coords = ddLat + '&nbsp;' + ddLon;
+
+            var geoHackUrl = 'https://tools.wmflabs.org/geohack/geohack.php?params=' + coords.replace(/('&nbsp;|"&nbsp;|&deg;&nbsp;|&nbsp;)/g, '_') + '_globe:mars_type:landmark'
+            results.data[index]['MapUrlGeoHack'] = geoHackUrl;
+
+            results.data[index]['Coordinates'] = '<a href="' + geoHackUrl + '" target="_blank">' + coords + '</a>';
           });
 
-          //console.log(results.data);
+          console.log(results.data);
 
 
           // Build plot.

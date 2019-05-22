@@ -495,7 +495,6 @@
       });
     }
 
-
     function handleMarsTrekCsvFile(files){
       window.csvFiles = files;
 
@@ -523,8 +522,20 @@
           // rather than based on the default topographic datum elevation values.
           var deltaElevations = [];
           var minElevation = Math.min(...elevations);
-          for (i = 0; i < elevations.length; i++) {
-            deltaElevations.push(elevations[i] + Math.abs(minElevation));
+
+          // If minimum elevation is 0 m then the topographic datum elevation profile is also
+          // the deltate elevation profile.
+          if(minElevation == 0){
+            deltaElevations = elevations;
+          }else{
+            // Build delta elevation profile.
+            for (i = 0; i < elevations.length; i++) {
+              if(minElevation < 0){
+                deltaElevations.push(elevations[i] + Math.abs(minElevation));
+              }else if(minElevation > 0){
+                deltaElevations.push(elevations[i] - Math.abs(minElevation));
+              }
+            }
           }
 
           // Calculate slope angles.
@@ -559,7 +570,6 @@
 
           console.log(results.data);
 
-
           // Build plot.
           if(window.zeroDatum === 'delta'){
             buildPlot(distances, deltaElevations, slopeAngles);
@@ -569,7 +579,6 @@
 
           // Build data table.
           buildDataTable(results.data);
-
       	}
       });
     }

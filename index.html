@@ -518,15 +518,12 @@
           // Calculate slope angles.
           var slopeAngles = [0];
           for (i = 1; i < distances.length; i++) {
-              var distance = distances[i];
-              var elevation = elevations[i];
+              var slopeAngle = Math.atan((elevations[i] - elevations[i-1]) / (distances[i] - distances[i-1])) * (180 / Math.PI);
+              slopeAngles.push(Math.ceil(slopeAngle));
 
-              //console.log("Distance: "  + distance.toString() + " - " + distances[i-1].toString() + " = " + (distance-distances[i-1]).toString());
-              //console.log("Elevation: "  + elevation.toString() + " - " + elevations[i-1].toString() + " = " + (elevation-elevations[i-1]).toString());
-
-              var slopeAngle = Math.atan((elevation - elevations[i-1]) / (distance - distances[i-1]));
-              //console.log("Elevation: " + slopeAngle);
-              slopeAngles.push(Math.ceil(slopeAngle * 100));
+              //console.log("Distance [m]: "  + distances[i].toString() + " - " + distances[i-1].toString() + " = " + (distances[i]-distances[i-1]).toString());
+              //console.log("Elevation [m]: "  + elevations[i].toString() + " - " + elevations[i-1].toString() + " = " + (elevations[i]-elevations[i-1]).toString());
+              //console.log("Slope Angle [deg]: " + slopeAngle + "\n\n");
           }
 
           // Update results data object with Delta Elevattion and Slope Angle Values.
